@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wasl — Crisis Response Network</title>
+<meta name="theme-color" content="#0b1220" />
+<meta http-equiv="Cache-Control" content="no-store" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="styles.css?v=4" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">⟲</div>
+    <div class="name">Wasl</div>
+  </div>
+  <nav class="actions">
+    <button id="toggleTheme" class="ghost">Theme</button>
+    <button id="installApp" class="primary">Install</button>
+  </nav>
+</header>
+
+<main class="layout">
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Reliable safety network for crisis zones</h1>
+      <p>Real-time alerts, offline identity, humanitarian maps, secure transfers, and resilient field hardware working together.
+      </p>
+      <div class="hero-cta">
+        <button id="openReport" class="primary">Report Incident</button>
+        <button id="openID" class="secondary">Create Offline ID</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span id="statReports">0</span><label>Reports</label></div>
+        <div class="stat"><span id="statVerified">0</span><label>Verified</label></div>
+        <div class="stat"><span id="statAid">0</span><label>Aid Sites</label></div>
+      </div>
+    </div>
+    <div class="hero-map">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div><span class="dot danger"></span> Danger</div>
+        <div><span class="dot aid"></span> Aid</div>
+        <div><span class="dot route"></span> Route</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Live Alerts</h2>
+      <div id="alerts" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>Secure Transfer</h2>
+      <form id="transferForm" class="form">
+        <div class="field"><label>Recipient ID</label><input id="recipient" required /></div>
+        <div class="field"><label>Amount</label><input id="amount" type="number" min="0" step="0.01" required /></div>
+        <button class="primary" type="submit">Queue Transfer</button>
+      </form>
+      <div class="sub">Offline queues send when connectivity returns.</div>
+      <div id="transferQueue" class="list"></div>
+    </div>
+    <div class="card">
+      <h2>Field Hardware</h2>
+      <div class="list">
+        <div class="item">
+          <div>
+            <div class="title">Low-power sensors</div>
+            <div class="desc">Detect blasts, toxic gas, and structural failure.</div>
+          </div>
+          <div class="badge">Online</div>
+        </div>
+        <div class="item">
+          <div>
+            <div class="title">Portable devices</div>
+            <div class="desc">Emergency beacons and mesh radios.</div>
+          </div>
+          <div class="badge">Online</div>
+        </div>
+        <div class="item">
+          <div>
+            <div class="title">Automated field hardware</div>
+            <div class="desc">Operates in harsh conditions with independent energy sources.</div>
+          </div>
+          <div class="badge warn">Degraded</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cards">
+    <div class="card wide">
+      <h2>AI Risk Prediction</h2>
+      <div class="sub">Aggregates verified reports to forecast high-risk areas and optimize routes.</div>
+      <div class="pillbar" id="riskBar"></div>
+    </div>
+  </section>
+</main>
+
+<div id="modalReport" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>Report Incident</h3>
+      <button class="ghost" id="closeReport">Close</button>
+    </div>
+    <form id="reportForm" class="form">
+      <div class="field"><label>Type</label>
+        <select id="incidentType" required>
+          <option value="danger">Danger</option>
+          <option value="aid">Aid</option>
+        </select>
+      </div>
+      <div class="field"><label>Description</label><textarea id="incidentDesc" rows="3" required></textarea></div>
+      <div class="field"><label>Coordinates</label><input id="incidentCoords" placeholder="lat,lng" required /></div>
+      <button class="primary" type="submit">Submit</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalID" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3>Offline Digital ID</h3>
+      <button class="ghost" id="closeID">Close</button>
+    </div>
+    <form id="idForm" class="form">
+      <div class="field"><label>Name</label><input id="idName" required /></div>
+      <div class="field"><label>Medical info</label><textarea id="idMedical" rows="2" required></textarea></div>
+      <div class="field"><label>Family contact</label><input id="idContact" required /></div>
+      <button class="primary" type="submit">Create ID</button>
+    </form>
+    <div id="idCard" class="id-card hidden">
+      <div class="id-row">
+        <div>
+          <div class="title" id="idOutName"></div>
+          <div class="desc" id="idOutMedical"></div>
+          <div class="desc" id="idOutContact"></div>
+        </div>
+        <canvas id="idQR"></canvas>
+      </div>
+      <div class="id-actions">
+        <button id="downloadID" class="secondary">Download</button>
+        <button id="saveLocalID" class="ghost">Save Local</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div>© Wasl • Resilient connectivity and protection</div>
+  <div class="links">
+    <a href="#" id="shareLink">Share</a>
+    <a href="#" id="clearData">Clear Data</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="app.js?v=4"></script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
